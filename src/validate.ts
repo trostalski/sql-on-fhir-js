@@ -1,52 +1,55 @@
-import { Column, Select, ViewDefinition } from "./types";
+import * as fs from "fs";
+import path from "path";
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
 
-export function validateViewDefinition(V: ViewDefinition): void {
-  if (!V.select || V.select.length === 0) {
-    throw new Error("No Selections Defined");
-  }
-  if (!V.resource) {
-    throw new Error("No Resourcetype Type Defined");
-  }
-  if (V.where && V.where.length > 0) {
-    V.where.forEach((W) => {
-      if (!W.path) {
-        throw new Error("Where Clause Missing Path");
-      }
-    });
-  }
+import { Select, ViewDefinition } from "./types";
 
-  V.select.forEach((S) => validateColumns(S));
+export function validateViewDefinition(viewDefinition: ViewDefinition) {
+  const ajv = new Ajv({ allErrors: true });
+  addFormats(ajv); // Adds formats like "uri"
+
+  const schemaPath = path.join(__dirname, "schema.json"); // Adjust the path as necessary
+  const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
+  const validate = ajv.compile(schema);
+  const valid = validate(viewDefinition);
+  if (!valid) {
+    console.log(validate.errors);
+    throw new Error("Invalid View Definition");
+  }
+  viewDefinition.select.forEach((select) => validateSelect(select));
 }
 
-export function validateColumns(S: Select): void {
-  const seenColumns = new Set<string>(); // Use a Set for seen column names for efficiency
+function validateSelect(inputSelect: Select) {
+  const seenColumns = new Set<string>();
 
-  function _validateColumns(S: Select) {
-    S.column.forEach((column) => {
+  function _validateSelect(S: Select) {
+    inputSelect.column.forEach((column) => {
       if (seenColumns.has(column.name)) {
-        throw new Error(`Column Already Defined: ${column.name}`); // Improved error message
+        throw new Error(`Duplicate column name: ${column.name}`);
       }
       seenColumns.add(column.name);
     });
 
     // Validate nested selections
-    if (S.select) {
-      S.select.forEach((select) => _validateColumns(select));
+    if (inputSelect.select) {
+      inputSelect.select.forEach((select) => validateSelect(select));
     }
 
     // Validate unionAll
-    if (S.unionAll && S.unionAll.length > 0) {
+    if (inputSelect.unionAll && inputSelect.unionAll.length > 0) {
       // Immediate throw if unionAll contains nested selects
-      const invalidUnion = S.unionAll.find(
+      const invalidUnion = inputSelect.unionAll.find(
         (s) => s.select && s.select.length > 0
       );
       if (invalidUnion) {
         throw new Error("Union All cannot have nested select");
       }
-
-      const firstUnionColumns = S.unionAll[0].column.map((c) => c.name);
+      const firstUnionColumns = inputSelect.unionAll[0].column.map(
+        (c) => c.name
+      );
       if (
-        S.unionAll.some((select) => {
+        inputSelect.unionAll.some((select) => {
           const columnNames = select.column.map((c) => c.name);
           return !arraysEqual(firstUnionColumns, columnNames); // Using arraysEqual for simplicity
         })
@@ -56,7 +59,7 @@ export function validateColumns(S: Select): void {
     }
   }
 
-  _validateColumns(S); // Start validation with the initial Select
+  _validateSelect(inputSelect);
 }
 
 function arraysEqual(a: string[], b: string[]) {

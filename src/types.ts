@@ -1,71 +1,73 @@
 interface Period {
-  start: string;
-  end: string;
+  start?: string;
+  end?: string;
 }
 
 interface Coding {
-  system: string;
-  code: string;
-  display: string;
+  system?: string;
+  code?: string;
+  display?: string;
+  version?: string;
+  userSelected?: boolean;
 }
 
 interface CodeableConcept {
-  coding: Coding[];
-  text: string;
+  coding?: Coding[];
+  text?: string;
 }
 
 interface Identifier {
-  use: string;
-  type: CodeableConcept;
-  system: string;
-  value: string;
-  period: Period;
+  use?: string;
+  type?: CodeableConcept;
+  system?: string;
+  value?: string;
+  period?: Period;
 }
 
 interface Meta {
-  versionId: string;
-  lastUpdated: string;
-  source: string;
-  profile: string[];
-  security: Coding[];
-  tag: Coding[];
+  versionId?: string;
+  lastUpdated?: string;
+  source?: string;
+  profile?: string[];
+  security?: Coding[];
+  tag?: Coding[];
 }
 
 interface ContactPoint {
-  system: string;
-  value: string;
-  use: string;
-  rank: number;
-  period: Period;
+  system?: string;
+  value?: string;
+  use?: string;
+  rank?: number;
+  period?: Period;
 }
 
 interface ContactDetail {
-  name: string;
-  telecom: ContactPoint[];
+  name?: string;
+  telecom?: ContactPoint[];
 }
 
 interface Quantity {
-  value: number;
-  comparator: string;
-  unit: string;
-  system: string;
-  code: string;
+  value?: number;
+  comparator?: string;
+  unit?: string;
+  system?: string;
+  code?: string;
 }
 
 interface Reference {
-  reference: string;
-  type: string;
-  identifier: Identifier;
-  display: string;
+  reference?: string;
+  type?: string;
+  identifier?: Identifier;
+  display?: string;
 }
 
 interface Range {
-  low: Quantity;
-  high: Quantity;
+  low?: Quantity;
+  high?: Quantity;
 }
 
 interface UsageContext {
-  code: Coding;
+  code?: Coding;
   valueCodeableConcept?: CodeableConcept;
   valueQuantity?: Quantity;
   valueRange?: Range;
@@ -104,12 +106,12 @@ export interface Column {
   tag?: {
     name: string;
     value: string;
-  };
+  }[];
 }
 
 export interface Select {
+  select?: Select[];
   column: Column[];
-  select: Select[];
   forEach?: string;
   forEachOrNull?: string;
   unionAll?: Select[];

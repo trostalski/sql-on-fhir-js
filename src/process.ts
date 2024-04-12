@@ -88,7 +88,7 @@ async function processSelectionStructure(
       }
 
       // Process Nested Selections
-      for (const sel of selection.select) {
+      for (const sel of selection.select!) {
         const rows = await processSelectionStructure([sel], f);
         parts.push(rows);
       }

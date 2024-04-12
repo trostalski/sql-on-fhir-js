@@ -1,0 +1,218 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "definitions": {
+    "Period": {
+      "type": "object",
+      "properties": {
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "Coding": {
+      "type": "object",
+      "properties": {
+        "system": { "type": "string", "format": "uri" },
+        "code": { "type": "string" },
+        "display": { "type": "string" },
+        "version": { "type": "string" },
+        "userSelected": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "CodeableConcept": {
+      "type": "object",
+      "properties": {
+        "coding": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Coding" }
+        },
+        "text": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "Identifier": {
+      "type": "object",
+      "properties": {
+        "use": { "type": "string" },
+        "type": { "$ref": "#/definitions/CodeableConcept" },
+        "system": { "type": "string", "format": "uri" },
+        "value": { "type": "string" },
+        "period": { "$ref": "#/definitions/Period" }
+      },
+      "additionalProperties": false
+    },
+    "Meta": {
+      "type": "object",
+      "properties": {
+        "versionId": { "type": "string" },
+        "lastUpdated": { "type": "string", "format": "date-time" },
+        "source": { "type": "string", "format": "uri" },
+        "profile": {
+          "type": "array",
+          "items": { "type": "string", "format": "uri" }
+        },
+        "security": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Coding" }
+        },
+        "tag": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Coding" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ContactPoint": {
+      "type": "object",
+      "properties": {
+        "system": { "type": "string" },
+        "value": { "type": "string" },
+        "use": { "type": "string" },
+        "rank": { "type": "integer" },
+        "period": { "$ref": "#/definitions/Period" }
+      },
+      "additionalProperties": false
+    },
+    "ContactDetail": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "telecom": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ContactPoint" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Quantity": {
+      "type": "object",
+      "properties": {
+        "value": { "type": "number" },
+        "comparator": { "type": "string" },
+        "unit": { "type": "string" },
+        "system": { "type": "string", "format": "uri" },
+        "code": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "Reference": {
+      "type": "object",
+      "properties": {
+        "reference": { "type": "string" },
+        "type": { "type": "string" },
+        "identifier": { "$ref": "#/definitions/Identifier" },
+        "display": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "Range": {
+      "type": "object",
+      "properties": {
+        "low": { "$ref": "#/definitions/Quantity" },
+        "high": { "$ref": "#/definitions/Quantity" }
+      },
+      "additionalProperties": false
+    },
+    "UsageContext": {
+      "type": "object",
+      "properties": {
+        "code": { "$ref": "#/definitions/Coding" },
+        "valueCodeableConcept": { "$ref": "#/definitions/CodeableConcept" },
+        "valueQuantity": { "$ref": "#/definitions/Quantity" },
+        "valueRange": { "$ref": "#/definitions/Range" },
+        "valueReference": { "$ref": "#/definitions/Reference" }
+      },
+      "additionalProperties": false
+    },
+    "Column": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "collection": { "type": "boolean" },
+        "type": { "type": "string" },
+        "tag": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "value": { "type": "string" }
+            },
+            "required": ["name", "value"]
+          }
+        }
+      },
+      "required": ["path", "name", "type"],
+      "additionalProperties": false
+    },
+    "Select": {
+      "type": "object",
+      "properties": {
+        "select": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Select" }
+        },
+        "column": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Column" },
+          "minItems": 1
+        },
+        "forEach": { "type": "string" },
+        "forEachOrNull": { "type": "string" },
+        "unionAll": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Select" }
+        }
+      },
+      "required": ["column"],
+      "additionalProperties": false
+    },
+    "Where": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "uri": { "type": "string", "format": "uri" },
+    "identifier": { "type": "string" },
+    "name": { "type": "string" },
+    "title": { "type": "string" },
+    "meta": { "$ref": "#/definitions/Meta" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "retired", "unknown"]
+    },
+    "experimental": { "type": "boolean" },
+    "publisher": { "type": "string" },
+    "contact": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/ContactDetail" }
+    },
+    "description": { "type": "string" },
+    "useContext": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/UsageContext" }
+    },
+    "copyright": { "type": "string" },
+    "resource": { "type": "string" },
+    "fhirVersion": { "type": "string" },
+    "select": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Select" },
+      "minItems": 1
+    },
+    "where": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Where" }
+    }
+  },
+  "required": ["name", "status", "select"]
+}

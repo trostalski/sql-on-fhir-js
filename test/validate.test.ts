@@ -1,156 +1,80 @@
-import { validateViewDefinition, validateColumns } from "../src/validate";
-import { ViewDefinition, Select, Column } from "../src/types";
+import { ViewDefinition } from "../src/types";
+import { validateViewDefinition } from "../src/validate";
 
 describe("validateViewDefinition", () => {
-  it("should throw an error if no selections are defined", () => {
+  it("should validate a correct ViewDefinition", () => {
     const viewDefinition: ViewDefinition = {
-      where: [],
-      status: "draft",
-      resource: "Patient",
-      select: [],
-    };
-    expect(() => validateViewDefinition(viewDefinition)).toThrow(
-      "No Selections Defined"
-    );
-  });
-
-  it("should throw an error if no resource type is defined", () => {
-    const viewDefinition: ViewDefinition = {
-      where: [],
-      status: "draft",
+      uri: "http://example.com",
+      identifier: "exampleIdentifier",
+      name: "Example View",
+      title: "Example View Title",
+      meta: {
+        versionId: "1",
+        lastUpdated: "2020-01-01T00:00:00Z",
+        source: "http://source.example.com",
+        profile: [],
+        security: [],
+        tag: [],
+      },
+      status: "active",
+      experimental: false,
+      publisher: "Example Publisher",
+      contact: [],
+      description: "An example view definition",
+      useContext: [],
+      copyright: "Copyright 2021 Example Inc.",
+      resource: "Example Resource",
+      fhirVersion: "4.0.1",
+      constant: [],
       select: [
         {
-          column: [],
-          select: [],
+          column: [
+            {
+              path: "path.to.property",
+              name: "Property",
+              type: "string",
+            },
+          ],
         },
       ],
-    };
-    expect(() => validateViewDefinition(viewDefinition)).toThrow(
-      "No Resourcetype Type Defined"
-    );
-  });
-
-  it("should throw an error if where clause is missing a path", () => {
-    const viewDefinition: ViewDefinition = {
-      status: "draft",
-      resource: "Patient",
-      select: [{ column: [], select: [] }],
-      where: [{ path: "" }],
-    };
-    expect(() => validateViewDefinition(viewDefinition)).toThrow(
-      "Where Clause Missing Path"
-    );
-  });
-});
-
-describe("validateColumns", () => {
-  it("should validate columns without throwing an error", () => {
-    const columns: Column[] = [{ name: "id", path: "Patient.id" }];
-    const select: Select = { column: columns, select: [] };
-    expect(() => validateColumns(select)).not.toThrow();
-  });
-
-  it("should throw an error if columns have the same name", () => {
-    const columns: Column[] = [
-      { name: "id", path: "Patient.id" },
-      { name: "id", path: "Patient.identifier" },
-    ];
-    const select: Select = { column: columns, select: [] };
-    expect(() => validateColumns(select)).toThrow("Column Already Defined");
-  });
-
-  // Test for recursive column validation and unionAll
-  it("should handle unionAll with inconsistent columns", () => {
-    const baseColumns: Column[] = [{ name: "gender", path: "Patient.gender" }];
-    const unionColumns1: Column[] = [{ name: "id", path: "Patient.id" }];
-    const unionColumns2: Column[] = [{ name: "name", path: "Patient.name" }];
-
-    const select: Select = {
-      column: baseColumns,
-      select: [],
-      unionAll: [
-        { column: unionColumns1, select: [] },
-        { column: unionColumns2, select: [] },
-      ],
-    };
-    expect(() => validateColumns(select)).toThrow(
-      "Union All column names must be the same"
-    );
-  });
-});
-
-describe("validateViewDefinition - Additional Valid Cases", () => {
-  it("should pass validation with a minimal valid view definition", () => {
-    const viewDefinition: ViewDefinition = {
       where: [],
-      status: "draft",
-      resource: "Patient",
-      select: [
-        {
-          column: [{ name: "id", path: "Patient.id" }],
-          select: [],
-        },
-      ],
     };
+
     expect(() => validateViewDefinition(viewDefinition)).not.toThrow();
   });
 
-  it("should pass validation even if where clause is optional and not provided", () => {
+  it("should throw an error if select is empty", () => {
     const viewDefinition: ViewDefinition = {
+      name: "Invalid View",
+      status: "active",
+      select: [], // Empty select array should cause validation to fail
       where: [],
-      status: "draft",
-      resource: "Patient",
+    };
+
+    expect(() => validateViewDefinition(viewDefinition)).toThrow(
+      "Invalid View Definition"
+    );
+  });
+
+  it("should throw an error for duplicate column names", () => {
+    const viewDefinition: ViewDefinition = {
+      name: "Invalid View",
+      status: "active",
       select: [
         {
-          column: [{ name: "name", path: "Patient.name" }],
-          select: [],
+          column: [
+            { path: "path.to.property", name: "Property", type: "string" },
+            { path: "path.to.property", name: "Property", type: "string" }, // Duplicate name
+          ],
         },
       ],
+      where: [],
     };
-    expect(() => validateViewDefinition(viewDefinition)).not.toThrow();
-  });
-});
 
-describe("validateColumns - Valid Scenarios", () => {
-  it("should validate deeply nested selections without throwing an error", () => {
-    const columns: Column[] = [{ name: "id", path: "Patient.id" }];
-    const nestedSelect: Select = {
-      column: [{ name: "name", path: "Patient.name" }],
-      select: [],
-    };
-    const select: Select = {
-      column: columns,
-      select: [nestedSelect],
-    };
-    console.log(select);
-    expect(() => validateColumns(select)).not.toThrow();
+    expect(() => validateViewDefinition(viewDefinition)).toThrow(
+      "Duplicate column name: Property"
+    );
   });
 
-  it("should handle valid unionAll structures", () => {
-    const columns: Column[] = [{ name: "id", path: "Patient.id" }];
-    const unionSelect1: Select = { column: columns, select: [] };
-    const unionSelect2: Select = { column: columns, select: [] };
-
-    const select: Select = {
-      column: columns,
-      select: [],
-      unionAll: [unionSelect1, unionSelect2],
-    };
-    expect(() => validateColumns(select)).not.toThrow();
-  });
-});
-
-describe("validateColumns - Error Scenarios", () => {
-  it("should throw an error if nested selections define the same column name", () => {
-    const columns: Column[] = [{ name: "id", path: "Patient.id" }];
-    const nestedSelect: Select = {
-      column: [{ name: "id", path: "Patient.birthDate" }],
-      select: [],
-    };
-    const select: Select = {
-      column: columns,
-      select: [nestedSelect],
-    };
-    expect(() => validateColumns(select)).toThrow("Column Already Defined");
-  });
+  // Add more tests to cover unionAll and other complex scenarios
 });

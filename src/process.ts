@@ -87,10 +87,12 @@ async function processSelectionStructure(
         parts.push([b]);
       }
 
-      // Process Nested Selections
-      for (const sel of selection.select!) {
-        const rows = await processSelectionStructure([sel], f);
-        parts.push(rows);
+      if (selection.select) {
+        // Process Nested Selections
+        for (const sel of selection.select) {
+          const rows = await processSelectionStructure([sel], f);
+          parts.push(rows);
+        }
       }
 
       // Process Union Alls

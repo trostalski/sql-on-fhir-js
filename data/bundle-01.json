@@ -1,0 +1,110 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:ac6d62cf-15a9-4ec4-ad92-ee200cc97235",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "ac6d62cf-15a9-4ec4-ad92-ee200cc97235",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs",
+                "display": "vital-signs"
+              },
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "blood-pressure-123",
+                "display": "Blood Pressure"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8302-2",
+              "display": "Body Height"
+            }
+          ],
+          "text": "Body Height"
+        },
+        "subject": {
+          "reference": "urn:uuid:c01fae27-c393-45b7-820e-b8e67c7cce1c"
+        },
+        "encounter": {
+          "reference": "urn:uuid:f1e7fe3c-2eb4-4abf-8909-3dff08fe6a6d"
+        },
+        "effectiveDateTime": "2019-07-24T21:03:47-04:00",
+        "issued": "2019-07-24T21:03:47.362-04:00",
+        "valueQuantity": {
+          "value": 56.662291362232104,
+          "unit": "cm",
+          "system": "http://unitsofmeasure.org",
+          "code": "cm"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ac6d62cf-15a9-4ec4-ad92-ee200cc97235",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "ac6d62cf-15a9-4ec4-ad92-ee200cc97235",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs",
+                "display": "vital-signs"
+              },
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "blood-pressure-123",
+                "display": "Blood Pressure"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8302-2",
+              "display": "Body Height"
+            }
+          ],
+          "text": "Body Height"
+        },
+        "subject": {
+          "reference": "urn:uuid:c01fae27-c393-45b7-820e-b8e67c7cce1c"
+        },
+        "encounter": {
+          "reference": "urn:uuid:f1e7fe3c-2eb4-4abf-8909-3dff08fe6a6d"
+        },
+        "effectiveDateTime": "2019-07-24T21:03:47-04:00",
+        "issued": "2019-07-24T21:03:47.362-04:00",
+        "valueQuantity": {
+          "value": 56.662291362232104,
+          "unit": "cm",
+          "system": "http://unitsofmeasure.org",
+          "code": "cm"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
+      }
+    }
+  ]
+}

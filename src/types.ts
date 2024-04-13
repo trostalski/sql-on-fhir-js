@@ -98,7 +98,7 @@ interface Constant {
 }
 
 export interface Column {
-  path: string;
+  path: string | Compile;
   name: string;
   description?: string;
   collection?: boolean;
@@ -139,5 +139,7 @@ export interface ViewDefinition {
   fhirVersion?: string;
   constant?: Constant[];
   select: Select[];
-  where: Where[];
+  where?: Where[];
 }
+
+export interface Row {}

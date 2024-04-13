@@ -1,21 +1,27 @@
 import fs from "fs";
 import path from "path";
-import { processResource } from "../src/process";
+import { processBundle, processResources } from "../src/process";
 
 describe("should work on patient", () => {
   it("", async () => {
     const resFile = fs.readFileSync(
-      path.join(__dirname, "..", "data", "patient-01.json"),
+      path.join(__dirname, "..", "data", "bundle-01.json"),
       "utf-8"
     );
     const res = JSON.parse(resFile);
     const vdFile = fs.readFileSync(
-      path.join(__dirname, "..", "data", "view-def-01.json"),
+      path.join(__dirname, "..", "data", "view-def-06.json"),
       "utf-8"
     );
     const vd = JSON.parse(vdFile);
 
-    const rows = await processResource(vd, res);
+    const rows = await processBundle(vd, res);
     console.log(rows);
+    // expect(rows).toEqual([
+    //   {
+    //     id: "1",
+    //     name: "John Doe",
+    //   }
+    // ])
   });
 });

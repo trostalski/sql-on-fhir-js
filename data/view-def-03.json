@@ -4,7 +4,7 @@
     {
       "column": [
         {
-          "path": "getResourceKey()",
+          "path": "id",
           "name": "resource_id"
         }
       ],

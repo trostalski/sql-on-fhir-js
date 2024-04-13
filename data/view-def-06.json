@@ -1,0 +1,53 @@
+{
+  "select": [
+    {
+      "column": [
+        {
+          "path": "id",
+          "name": "resource_id"
+        },
+        {
+          "path": "status",
+          "name": "status"
+        }
+      ]
+    },
+    {
+      "column": [
+        {
+          "path": "system",
+          "name": "code_system"
+        },
+        {
+          "path": "display",
+          "name": "code_display"
+        },
+        {
+          "path": "code",
+          "name": "code_code"
+        }
+      ],
+      "forEach": "category.coding"
+    },
+    {
+      "column": [
+        {
+          "path": "system",
+          "name": "cat_system"
+        },
+        {
+          "path": "display",
+          "name": "cat_display"
+        },
+        {
+          "path": "code",
+          "name": "cat_code"
+        }
+      ],
+      "forEach": "code.coding"
+    }
+  ],
+  "name": "Observations",
+  "status": "draft",
+  "resource": "Observation"
+}

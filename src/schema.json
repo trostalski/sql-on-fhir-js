@@ -146,7 +146,7 @@
           }
         }
       },
-      "required": ["path", "name", "type"],
+      "required": ["path", "name"],
       "additionalProperties": false
     },
     "Select": {

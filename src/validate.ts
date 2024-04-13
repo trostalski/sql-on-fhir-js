@@ -7,9 +7,9 @@ import { Select, ViewDefinition } from "./types";
 
 export function validateViewDefinition(viewDefinition: ViewDefinition) {
   const ajv = new Ajv({ allErrors: true });
-  addFormats(ajv); // Adds formats like "uri"
+  addFormats(ajv);
 
-  const schemaPath = path.join(__dirname, "schema.json"); // Adjust the path as necessary
+  const schemaPath = path.join(__dirname, "schema.json");
   const schema = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
   const validate = ajv.compile(schema);
   const valid = validate(viewDefinition);
@@ -17,14 +17,14 @@ export function validateViewDefinition(viewDefinition: ViewDefinition) {
     console.log(validate.errors);
     throw new Error("Invalid View Definition");
   }
-  viewDefinition.select.forEach((select) => validateSelect(select));
+  validateSelect(viewDefinition.select);
 }
 
-function validateSelect(inputSelect: Select) {
+function validateSelect(inputSelect: Select[]) {
   const seenColumns = new Set<string>();
 
   function _validateSelect(S: Select) {
-    inputSelect.column.forEach((column) => {
+    S.column.forEach((column) => {
       if (seenColumns.has(column.name)) {
         throw new Error(`Duplicate column name: ${column.name}`);
       }
@@ -32,24 +32,22 @@ function validateSelect(inputSelect: Select) {
     });
 
     // Validate nested selections
-    if (inputSelect.select) {
-      inputSelect.select.forEach((select) => validateSelect(select));
+    if (S.select) {
+      S.select.forEach((select) => _validateSelect(select));
     }
 
     // Validate unionAll
-    if (inputSelect.unionAll && inputSelect.unionAll.length > 0) {
+    if (S.unionAll && S.unionAll.length > 0) {
       // Immediate throw if unionAll contains nested selects
-      const invalidUnion = inputSelect.unionAll.find(
+      const invalidUnion = S.unionAll.find(
         (s) => s.select && s.select.length > 0
       );
       if (invalidUnion) {
         throw new Error("Union All cannot have nested select");
       }
-      const firstUnionColumns = inputSelect.unionAll[0].column.map(
-        (c) => c.name
-      );
+      const firstUnionColumns = S.unionAll[0].column.map((c) => c.name);
       if (
-        inputSelect.unionAll.some((select) => {
+        S.unionAll.some((select) => {
           const columnNames = select.column.map((c) => c.name);
           return !arraysEqual(firstUnionColumns, columnNames); // Using arraysEqual for simplicity
         })
@@ -58,8 +56,7 @@ function validateSelect(inputSelect: Select) {
       }
     }
   }
-
-  _validateSelect(inputSelect);
+  inputSelect.forEach(_validateSelect);
 }
 
 function arraysEqual(a: string[], b: string[]) {

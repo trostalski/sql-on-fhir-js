@@ -168,7 +168,7 @@
           "items": { "$ref": "#/definitions/Select" }
         }
       },
-      "required": ["column"],
+      "required": [],
       "additionalProperties": false
     },
     "Where": {
@@ -214,5 +214,5 @@
       "items": { "$ref": "#/definitions/Where" }
     }
   },
-  "required": ["name", "status", "select"]
+  "required": ["select"]
 }

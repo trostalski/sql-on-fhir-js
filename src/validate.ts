@@ -14,8 +14,9 @@ export function validateViewDefinition(viewDefinition: ViewDefinition) {
   const validate = ajv.compile(schema);
   const valid = validate(viewDefinition);
   if (!valid) {
-    console.log(validate.errors);
-    throw new Error("Invalid View Definition");
+    throw new Error(
+      validate.errors?.map((e) => JSON.stringify(e.message)).join(", ")
+    );
   }
   validateSelect(viewDefinition.select);
 }
@@ -24,7 +25,7 @@ function validateSelect(inputSelect: Select[]) {
   const seenColumns = new Set<string>();
 
   function _validateSelect(S: Select) {
-    S.column.forEach((column) => {
+    S.column?.forEach((column) => {
       if (seenColumns.has(column.name)) {
         throw new Error(`Duplicate column name: ${column.name}`);
       }
@@ -45,10 +46,12 @@ function validateSelect(inputSelect: Select[]) {
       if (invalidUnion) {
         throw new Error("Union All cannot have nested select");
       }
-      const firstUnionColumns = S.unionAll[0].column.map((c) => c.name);
+      const firstUnionColumns = S.unionAll[0].column?.map((c) => c.name);
       if (
+        firstUnionColumns &&
         S.unionAll.some((select) => {
-          const columnNames = select.column.map((c) => c.name);
+          const columnNames = select.column?.map((c) => c.name);
+          if (!columnNames) return false;
           return !arraysEqual(firstUnionColumns, columnNames); // Using arraysEqual for simplicity
         })
       ) {

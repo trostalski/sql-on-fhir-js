@@ -1,10 +1,4 @@
-import { _validateViewDefinition, validateColumns } from "./validate";
-import { processBundle, processResources, processResources } from "./process";
+import { evaluate } from "./process";
+import { validateViewDefinition } from "./validate";
 
-export {
-  _validateViewDefinition as validateViewDefinition,
-  validateColumns,
-  processBundle,
-  processResources as processResource,
-  processResources,
-};
+export { evaluate, validateViewDefinition };

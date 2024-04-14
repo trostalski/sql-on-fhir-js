@@ -111,7 +111,7 @@ export interface Column {
 
 export interface Select {
   select?: Select[];
-  column: Column[];
+  column?: Column[];
   forEach?: string;
   forEachOrNull?: string;
   unionAll?: Select[];
@@ -145,3 +145,6 @@ export interface ViewDefinition {
 export interface Row {
   [key: string]: any;
 }
+
+export type Resource = any;
+export type Bundle = any;

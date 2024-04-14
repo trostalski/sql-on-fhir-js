@@ -3,10 +3,10 @@
   "type": "transaction",
   "entry": [
     {
-      "fullUrl": "urn:uuid:ac6d62cf-15a9-4ec4-ad92-ee200cc97235",
+      "fullUrl": "urn:uuid:1",
       "resource": {
         "resourceType": "Observation",
-        "id": "ac6d62cf-15a9-4ec4-ad92-ee200cc97235",
+        "id": "1",
         "status": "final",
         "category": [
           {
@@ -20,6 +20,11 @@
                 "system": "http://terminology.hl7.org/CodeSystem/observation-category",
                 "code": "blood-pressure-123",
                 "display": "Blood Pressure"
+              },
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "heart-rate",
+                "display": "Heart Rate"
               }
             ]
           }
@@ -55,10 +60,10 @@
       }
     },
     {
-      "fullUrl": "urn:uuid:ac6d62cf-15a9-4ec4-ad92-ee200cc97235",
+      "fullUrl": "urn:uuid:2",
       "resource": {
         "resourceType": "Observation",
-        "id": "ac6d62cf-15a9-4ec4-ad92-ee200cc97235",
+        "id": "2",
         "status": "final",
         "category": [
           {

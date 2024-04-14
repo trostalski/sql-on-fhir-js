@@ -16,7 +16,7 @@ describe("should work on patient", () => {
     const vd = JSON.parse(vdFile);
 
     const rows = await processBundle(vd, res);
-    console.log(rows);
+    console.log(JSON.stringify(rows, null, 2));
     // expect(rows).toEqual([
     //   {
     //     id: "1",

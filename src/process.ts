@@ -1,6 +1,6 @@
 import { ViewDefinition, Select, Row } from "./types";
-import fhirpath from "fhirpath";
 import { validateViewDefinition } from "./validate";
+import fhirpath from "fhirpath";
 
 function compilePath(path: string | Compile) {
   if (typeof path === "string") {
@@ -46,9 +46,11 @@ export function processResources(
     return true;
   });
 
-  const rows = filteredResources.map((r) => {
-    return processSelect(V.select, r);
-  });
+  const rows = [];
+
+  for (const r of filteredResources) {
+    rows.push(...processSelect(V.select, r));
+  }
 
   return rows;
 }
@@ -73,86 +75,85 @@ export function processBundle(V: ViewDefinition, B: any): undefined | any[] {
   return rows;
 }
 
+// Process a selection structure recursively
 function processSelect(selectInput: Select[], fhirData: Object) {
-  function _processSelect(
-    selectInput: Select[],
-    fhirData: Object,
-    existingRows: Row[]
-  ) {
-    const rawSelects = selectInput.filter(
-      (s) => !s.forEach && !s.forEachOrNull && !s.unionAll
-    );
-    const rawRows = [];
-    for (const rawSelect of rawSelects) {
-      const row: Row = {};
-      for (const col of rawSelect.column) {
-        const val = (col.path as Compile)(fhirData);
-        if (val.length === 0) {
-          row[col.name] = null;
-        } else if (val.length === 1) {
-          row[col.name] = val[0];
-        } else if (col.collection) {
-          row[col.name] = val;
-        } else {
-          throw new Error("Multiple values found but not expected for column");
+  const rows: Row[][] = [];
+
+  function _processSelect(S: Select[], f: any) {
+    for (const selection of S) {
+      const foci = selection.forEach
+        ? fhirpath.evaluate(fhirData, selection.forEach)
+        : selection.forEachOrNull
+        ? fhirpath.evaluate(fhirData, selection.forEachOrNull) || [null]
+        : [fhirData];
+
+      const selectionRows: Row[] = [];
+
+      for (const f of foci) {
+        const baseRow: Row = {};
+        for (const col of selection.column) {
+          const val = (col.path as Compile)(f);
+          if (val.length === 0) {
+            baseRow[col.name] = null;
+          } else if (val.length === 1) {
+            baseRow[col.name] = val[0];
+          } else if (col.collection) {
+            baseRow[col.name] = val;
+          } else {
+            throw new Error(
+              "Multiple values found but not expected for column"
+            );
+          }
+        }
+        selectionRows.push(baseRow);
+
+        // Process Nested Selections
+        if (selection.select) {
+          rows.push(..._processSelect(selection.select, f));
+        }
+
+        // Process Union Alls
+        if (selection.unionAll) {
+          rows.push(..._processSelect(selection.unionAll, f));
         }
       }
-      rawRows.push(row);
+      rows.push(selectionRows);
     }
+    return rows;
   }
+  const finalRows = _processSelect(selectInput, fhirData);
+  return crossJoinLists(finalRows);
 }
 
-// Process a selection structure recursively
-// function processSelect(selectInput: Select[], fhirData: Object) {
-//   const rows: Row[][] = [];
+function crossJoinLists(listsOfObjects: Row[][]): Row[] {
+  if (listsOfObjects.length === 0) return [];
+  if (listsOfObjects.length === 1) return listsOfObjects[0];
 
-//   function _processSelect(S: Select[], f: any, rows: Row[][]) {
-//     for (const selection of selectInput) {
-//       const foci = selection.forEach
-//         ? fhirpath.evaluate(fhirData, selection.forEach)
-//         : selection.forEachOrNull
-//         ? fhirpath.evaluate(fhirData, selection.forEachOrNull) || [null]
-//         : [fhirData];
+  // Helper function to perform the actual cross join recursively
+  function recursiveCrossJoin(
+    currentIndex: number,
+    currentResult: Row[]
+  ): Row[] {
+    if (currentIndex === listsOfObjects.length) {
+      return currentResult;
+    }
 
-//       for (const f of foci) {
-//         const baseRows =
-//         for (const col of selection.column) {
-//           const row: { [key: string]: any } = {};
-//           const val = (col.path as Compile)(f);
-//           if (val.length === 0) {
-//             row[col.name] = null;
-//           } else if (val.length === 1) {
-//             row[col.name] = val[0];
-//           } else if (col.collection) {
-//             row[col.name] = val;
-//           } else {
-//             throw new Error(
-//               "Multiple values found but not expected for column"
-//             );
-//           }
-//           baseRows.push(row);
-//         }
-//         rows.push(baseRows);
+    let nextResult: Row[] = [];
+    const currentList = listsOfObjects[currentIndex];
 
-//         // Process Nested Selections
-//         if (selection.select) {
-//           rows.push(_processSelect(selection.select, f));
-//         }
+    if (currentIndex === 0) {
+      // Initialize with the first list of objects
+      return recursiveCrossJoin(currentIndex + 1, currentList);
+    } else {
+      // Cross join the accumulated results with the current list
+      for (const accObj of currentResult) {
+        for (const newObj of currentList) {
+          nextResult.push({ ...accObj, ...newObj });
+        }
+      }
+      return recursiveCrossJoin(currentIndex + 1, nextResult);
+    }
+  }
 
-//         // Process Union Alls
-//         if (selection.unionAll) {
-//           rows.push(_processSelect(selection.unionAll, f));
-//         }
-//       }
-//     }
-//     return rows;
-//   }
-//   const finalRows = _processSelect(selectInput, fhirData);
-//   return cartesianProduct(finalRows);
-// }
-
-// Helper function to compute Cartesian product of arrays
-function cartesianProduct(arrays: any[][]) {
-  const keys = new Set();
-  const rows: any = [];
+  return recursiveCrossJoin(0, []);
 }

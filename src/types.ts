@@ -142,4 +142,6 @@ export interface ViewDefinition {
   where?: Where[];
 }
 
-export interface Row {}
+export interface Row {
+  [key: string]: any;
+}

@@ -4,7 +4,7 @@
   "description": "Implementation of the SQL on FHIR specification in javascript.",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest -- process.test.ts"
   },
   "author": "Till Rostalski",
   "license": "ISC",

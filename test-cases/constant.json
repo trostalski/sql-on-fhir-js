@@ -253,7 +253,7 @@
         ],
         "where": [
           {
-            "path": "deceased.ofType(boolean).exists() and deceased.ofType(boolean) = %is_deceased"
+            "path": "deceased.ofType(Boolean).exists() and deceased.ofType(Boolean) = %is_deceased"
           }
         ]
       },

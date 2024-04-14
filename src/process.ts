@@ -1,4 +1,11 @@
-import { ViewDefinition, Select, Row, Resource, Bundle } from "./types";
+import {
+  ViewDefinition,
+  Select,
+  Row,
+  Resource,
+  Bundle,
+  Constant,
+} from "./types";
 import { validateViewDefinition } from "./validate";
 import fhirpath from "fhirpath";
 
@@ -18,32 +25,84 @@ export function evaluate(
   }
 }
 
-function compilePath(path: string | Compile) {
+function compilePath(path: string | Compile, constants?: Map<string, string>) {
+  const constantRegex = /%([a-zA-Z0-9_]+)/g;
+
   if (typeof path === "string") {
+    if (constants) {
+      path = path.replace(constantRegex, (match, p1) => {
+        const value = constants.get(p1);
+        if (value) {
+          return value;
+        } else {
+          throw new Error(`Constant value not found for ${p1}`);
+        }
+      });
+    }
+
     return fhirpath.compile(path);
   } else {
-    return path;
+    throw new Error("Path must be a string");
   }
 }
 
-function compileSelectPaths(select: Select) {
-  // Helper function to precompile all paths
+function compileSelectPaths(select: Select, constants?: Map<string, string>) {
   if (select.column) {
     select.column.forEach((col) => {
-      col.path = compilePath(col.path);
+      col.path = compilePath(col.path, constants);
     });
   }
+  if (select.forEach) {
+    select.forEach = compilePath(select.forEach, constants);
+  }
+  if (select.forEachOrNull) {
+    select.forEachOrNull = compilePath(select.forEachOrNull, constants);
+  }
 
-  select.select?.forEach(compileSelectPaths);
-  select.unionAll?.forEach(compileSelectPaths);
+  select.select?.forEach((s) => compileSelectPaths(s, constants));
+  select.unionAll?.forEach((s) => compileSelectPaths(s, constants));
 }
 
 // Main entry point to process resources based on a view definition
 export function processResources(V: ViewDefinition, R: any[]) {
   validateViewDefinition(V);
+  const constantMap = new Map<string, any>();
+  V.constant?.forEach((c) => {
+    let value =
+      c.valueBoolean ??
+      c.valueString ??
+      c.valueInteger ??
+      c.valueDecimal ??
+      c.valueDateTime ??
+      c.valueDate ??
+      c.valueUri ??
+      c.valueUrl ??
+      c.valueUuid ??
+      c.valueBase64Binary ??
+      c.valueCanonical ??
+      c.valueCode ??
+      c.valueId ??
+      c.valueInstant ??
+      c.valueOid ??
+      c.valuePositiveInt ??
+      c.valueTime ??
+      c.valueUnsignedInt ??
+      c.valueInteger64 ??
+      null;
 
-  V.select.forEach(compileSelectPaths);
-  V.where?.forEach((w) => compilePath(w.path));
+    if (c.valueString) {
+      value = "'" + value + "'";
+    }
+
+    if (value !== null) {
+      constantMap.set(c.name, value);
+    } else {
+      throw new Error(`Constant value not found for ${c.name}`);
+    }
+  });
+
+  V.select.forEach((s) => compileSelectPaths(s, constantMap));
+  V.where?.forEach((w) => (w.path = compilePath(w.path, constantMap)));
 
   let filteredResources = R;
 
@@ -53,8 +112,7 @@ export function processResources(V: ViewDefinition, R: any[]) {
     }
     if (V.where) {
       for (const condition of V.where!) {
-        const result = fhirpath.evaluate(r, condition.path);
-
+        const result = (condition.path as Compile)(r);
         if (!result || result.length === 0 || !result[0]) {
           return false;
         }
@@ -78,14 +136,19 @@ function processSelect(selectInput: Select[], fhirData: Object) {
 
   function _processSelect(S: Select[], f: any) {
     for (const selection of S) {
-      const foci = selection.forEach
-        ? fhirpath.evaluate(fhirData, selection.forEach)
-        : selection.forEachOrNull
-        ? fhirpath.evaluate(fhirData, selection.forEachOrNull) || [null]
-        : [fhirData];
+      let foci;
+      if (selection.forEach) {
+        foci = (selection.forEach as Compile)(f);
+      } else if (selection.forEachOrNull) {
+        foci = (selection.forEachOrNull as Compile)(f);
+        if (!foci) {
+          foci = [null];
+        }
+      } else {
+        foci = [f];
+      }
 
       const selectionRows: Row[] = [];
-      console.log("FOCI: ", foci);
 
       for (const f of foci) {
         const baseRow: Row = {};
@@ -105,7 +168,6 @@ function processSelect(selectInput: Select[], fhirData: Object) {
             }
           }
         }
-        console.log("BASE ROW: ", baseRow);
         selectionRows.push(baseRow);
 
         // Process Nested Selections
@@ -118,13 +180,11 @@ function processSelect(selectInput: Select[], fhirData: Object) {
           _processSelect(selection.unionAll, f);
         }
       }
-      console.log("SELECTION ROWS: ", selectionRows);
       rows.push(selectionRows);
     }
     return rows;
   }
   const finalRows = _processSelect(selectInput, fhirData);
-  console.log("FINAL ROWS: ", JSON.stringify(finalRows, null, 2));
   return crossJoinLists(finalRows);
 }
 

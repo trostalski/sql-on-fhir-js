@@ -74,7 +74,7 @@ interface UsageContext {
   valueReference?: Reference;
 }
 
-interface Constant {
+export interface Constant {
   name: string;
   valueBase64Binary?: string;
   valueBoolean?: boolean;
@@ -112,13 +112,13 @@ export interface Column {
 export interface Select {
   select?: Select[];
   column?: Column[];
-  forEach?: string;
-  forEachOrNull?: string;
+  forEach?: string | Compile;
+  forEachOrNull?: string | Compile;
   unionAll?: Select[];
 }
 
 interface Where {
-  path: string;
+  path: string | Compile;
   description?: string;
 }
 

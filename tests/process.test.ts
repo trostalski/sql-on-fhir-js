@@ -24,6 +24,7 @@ files.forEach((f) => {
         test(testCase.title, () => {
           console.log("TITLE: ", testCase.title);
           const res = evaluate(view, resources);
+          console.log("RES: ", res);
           expect(res).toEqual(testCase.expect);
         });
       } else if (testCase.expectError !== undefined) {
